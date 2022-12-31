@@ -6,6 +6,8 @@
  * Based on: https://github.com/SmittyHalibut/EleksTubeHAX
  */
 
+ 
+#include <WiFiManager.h> // ESP32
 #include <stdint.h>
 #include "GLOBAL_DEFINES.h"
 #include "Buttons.h"
@@ -17,12 +19,14 @@
 #include "WiFi_WPS.h"
 #include "Mqtt_client_ips.h"
 
+
 Backlights backlights;
 Buttons buttons;
 TFTs tfts;
 Clock uclock;
 Menu menu;
 StoredConfig stored_config;
+WiFiManager wfm;
 
 bool FullHour = false;
 uint8_t hour_old = 255;
@@ -55,7 +59,7 @@ void setup() {
 
   // Setup WiFi connection. Must be done before setting up Clock.
   // This is done outside Clock so the network can be used for other things.
-//  WiFiBegin(&stored_config.config.wifi);
+  //  WiFiBegin(&stored_config.config.wifi);
   tfts.println("WiFi start");
   WifiBegin();
   
@@ -70,10 +74,11 @@ void setup() {
   tfts.println("Clock start");
   uclock.begin(&stored_config.config.uclock);
 
+  #ifdef MQTT_ENABLED
   // Setup MQTT
   tfts.println("MQTT start");
   MqttStart();
-
+  #endif /// MQTT_ENABLED
 
   tfts.println("Geoloc query");
   if (GetGeoLocationTimeZoneOffset()) {
@@ -110,6 +115,8 @@ void loop() {
   // Do all the maintenance work
   WifiReconnect(); // if not connected attempt to reconnect
 
+
+  #ifdef MQTT_ENABLED
   MqttStatusPower = tfts.isEnabled();
   MqttStatusState = (uclock.getActiveGraphicIdx()+1) * 5;   // 10 
   MqttLoop();
@@ -144,6 +151,7 @@ void loop() {
     Serial.println(" Done.");
     */
   }
+    #endif /// MQTT_ENABLED
 
   buttons.loop();
 

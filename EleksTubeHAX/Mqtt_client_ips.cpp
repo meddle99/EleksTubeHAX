@@ -9,6 +9,8 @@
  * Reference: https://github.com/aososam/Smartnest/tree/master/Devices/thermostat
  * Documentation: https://www.docu.smartnest.cz/
  */
+#ifdef MQTT_ENABLED
+
 
 #include "Mqtt_client_ips.h"
 #include "WiFi.h"       // for ESP32
@@ -270,3 +272,5 @@ void MqttPeriodicReportBack() {
     lastTimeSent = millis();
     }
 }
+
+#endif

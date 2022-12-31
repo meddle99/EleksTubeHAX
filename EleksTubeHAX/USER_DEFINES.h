@@ -5,10 +5,11 @@
  * User defines are located in "USER_DEFINES.h"
  */
 
-
 #ifndef USER_DEFINES_H_
 #define USER_DEFINES_H_
 
+
+#define GEOLOCATION_API_KEY "715273e6788f438eae588ec88cf12c9b"
 
 //#define DEBUG_OUTPUT
 
@@ -20,8 +21,8 @@
 
 
 // ************* Version Infomation  *************
-#define DEVICE_NAME       "IPS-clock"
-#define FIRMWARE_VERSION  "aly-fly IPS clock v0.3"
+#define DEVICE_NAME       "IPS_Clock"
+#define FIRMWARE_VERSION  "IPS Clock v0.7"
 #define USE_CLK_FILES   // select between .CLK and .BMP images
 #define ESP_MANUFACTURER  "ESPRESSIF"
 #define ESP_MODEL_NUMBER  "ESP32"
@@ -36,10 +37,9 @@
 // ************* WiFi config *************
 #define WIFI_CONNECT_TIMEOUT_SEC  20
 #define WIFI_RETRY_CONNECTION_SEC  15
-#define ESP_WPS_MODE      WPS_TYPE_PBC  // push-button; uncomment to use WPS
-#define WIFI_USE_WPS  //uncomment to use WPS 
-//#define SECRET_WIFI_SSID            //not needed for WPS
-//#define SECRET_WIFI_PASSWD          //not needed for WPS.  Caution - Hard coded password stored clear text in BIN file
+//#define ESP_WPS_MODE      WPS_TYPE_PBC  // push-button; uncomment to use WPS
+//#define WIFI_USE_WPS  //uncomment to use WPS 
+
 
 
 //  *************  Geolocation  *************
@@ -53,9 +53,9 @@
 //#define MQTT_CLIENT "deviceid" 
 //#define MQTT_USERNAME "Username"             
 //#define MQTT_PASSWORD "MQTT_PASSWORD"
-#define MQTT_PORT 1883                         // Broker port
-#define MQTT_RECONNECT_WAIT_SEC  30   // how long to wait between retries to connect to broker
-#define MQTT_REPORT_STATUS_EVERY_SEC  71 // How often report status to MQTT Broker
+//#define MQTT_PORT 1883                         // Broker port
+//#define MQTT_RECONNECT_WAIT_SEC  30   // how long to wait between retries to connect to broker
+//#define MQTT_REPORT_STATUS_EVERY_SEC  71 // How often report status to MQTT Broker
 
       
 #endif

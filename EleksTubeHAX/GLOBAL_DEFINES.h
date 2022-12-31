@@ -12,7 +12,6 @@
 
 #include <stdint.h>
 #include <Arduino.h>
-
 #include "USER_DEFINES.h"    ///// User defines
 
 

@@ -37,6 +37,8 @@ void TFTs::showNoWifiStatus() {
   println("NO WIFI !");
   }
 
+#ifdef MQTT_ENABLED
+
 void TFTs::showNoMqttStatus() {
   chip_select.setSecondsTens();
   setTextColor(TFT_RED, TFT_BLACK);
@@ -44,6 +46,7 @@ void TFTs::showNoMqttStatus() {
   setCursor(10, TFT_HEIGHT-29, 4);
   println("NO MQTT !");
   }
+#endif /// MQTT_ENABLED
 
 
 void TFTs::setDigit(uint8_t digit, uint8_t value, show_t show) {
@@ -58,10 +61,13 @@ void TFTs::setDigit(uint8_t digit, uint8_t value, show_t show) {
         showNoWifiStatus();
       }    
 
+#ifdef MQTT_ENABLED
     if (digit == SECONDS_TENS) 
       if (!MqttConnected) { 
         showNoMqttStatus();
       }          
+#endif /// MQTT_ENABLED
+      
   }
 }
 
