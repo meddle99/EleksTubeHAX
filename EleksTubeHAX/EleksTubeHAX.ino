@@ -19,6 +19,9 @@
 #include "WiFi_WPS.h"
 #include "Mqtt_client_ips.h"
 
+TaskHandle_t ClockLoopHandle;
+
+
 
 Backlights backlights;
 Buttons buttons;
@@ -27,6 +30,8 @@ Clock uclock;
 Menu menu;
 StoredConfig stored_config;
 WiFiManager wfm;
+bool portalRunning = false;
+std::vector<const char *> wm_menu  = {"wifi", "info"};
 
 bool FullHour = false;
 uint8_t hour_old = 255;
@@ -46,9 +51,13 @@ void setup() {
   stored_config.begin();
   stored_config.load();
 
+  wfm.setClass("invert"); // dark theme
+
   backlights.begin(&stored_config.config.backlights);
   buttons.begin();
   menu.begin();
+
+
 
   // Setup TFTs
   tfts.begin();
@@ -93,6 +102,16 @@ void setup() {
     tfts.println("Geo FAILED");
   }
 
+  Serial.println("Starting Portal");
+  
+
+  wfm.setMenu(wm_menu);
+  wfm.startWebPortal();
+  portalRunning = true;
+  
+
+
+
   tfts.println("Done with setup.");
 
   // Leave boot up messages on screen for a few seconds.
@@ -107,14 +126,26 @@ void setup() {
   tfts.fillScreen(TFT_BLACK);
   uclock.loop();
   updateClockDisplay(TFTs::force);
+
+  Serial.println("Starting Clockloop on core 0...");
+  xTaskCreatePinnedToCore(
+      ClockLoop, /* Function to implement the task */
+      "ClockLoop", /* Name of the task */
+      10000,  /* Stack size in words */
+      NULL,  /* Task input parameter */
+      0,  /* Priority of the task */
+      &ClockLoopHandle,  /* Task handle. */
+      0); /* Core where the task should run */
+  
+  
   Serial.println("Setup finished.");
 }
 
 void loop() {
   uint32_t millis_at_top = millis();
+  wfm.process();
   // Do all the maintenance work
   WifiReconnect(); // if not connected attempt to reconnect
-
 
   #ifdef MQTT_ENABLED
   MqttStatusPower = tfts.isEnabled();
@@ -153,22 +184,19 @@ void loop() {
   }
     #endif /// MQTT_ENABLED
 
+#ifndef HARDWARE_NovelLife_SE_CLOCK
   buttons.loop();
-
   // Power button: If in menu, exit menu. Else turn off displays and backlight.
   if (buttons.power.isDownEdge() && (menu.getState() == Menu::idle)) {
     tfts.toggleAllDisplays();
     backlights.togglePower();
   }
- 
   menu.loop(buttons);  // Must be called after buttons.loop()
-  backlights.loop();
-  uclock.loop();
+#endif  //HARDWARE_NovelLife_SE_CLOCK
+  
 
-  EveryFullHour(); // night or daytime
+  
 
-  // Update the clock.
-  updateClockDisplay();
   
   // Menu
   if (menu.stateChanged() && tfts.isEnabled()) {
@@ -306,27 +334,16 @@ void loop() {
     }
   }
 
-  uint32_t time_in_loop = millis() - millis_at_top;
-  if (time_in_loop < 20) {
-    // we have free time, spend it for loading next image into buffer
-    tfts.LoadNextImage();
 
-    // we still have extra time
-    time_in_loop = millis() - millis_at_top;
-    if (time_in_loop < 20) {
       // run once a day (= 744 times per month which is below the limit of 5k for free account)
       if (FullHour && (uclock.getHour24() == 3)) { // Daylight savings time changes at 3 in the morning
         if (GetGeoLocationTimeZoneOffset()) {
           uclock.setTimeZoneOffset(GeoLocTZoffset * 3600);
         }
       }  
-      // Sleep for up to 20ms, less if we've spent time doing stuff above.
-      time_in_loop = millis() - millis_at_top;
-      if (time_in_loop < 20) {
-        delay(20 - time_in_loop);
-      }
-    }
-  }
+
+    
+  
 #ifdef DEBUG_OUTPUT
   if (time_in_loop <= 1) Serial.print(".");
   else Serial.println(time_in_loop);
@@ -368,6 +385,32 @@ void EveryFullHour() {
   }   
 }
 
+
+void ClockLoop(void * parameter) {
+  Serial.print("ClockLoop running on core ");
+  Serial.println(xPortGetCoreID());
+  for(;;) {
+  uint32_t millis_at_top = millis();
+  //Serial.println(millis());
+  uclock.loop();
+  backlights.loop();
+  EveryFullHour(); // night or daytime
+  // Update the clock.
+  updateClockDisplay(); 
+  
+  // we have free time, spend it for loading next image into buffer
+ tfts.LoadNextImage();
+
+ // we may still have extra time
+ uint32_t time_in_loop = millis() - millis_at_top;
+ if (time_in_loop < 50) {
+    // Sleep for up to 50ms, less if we've spent time doing stuff above.
+    delay(50 - time_in_loop);
+    }
+  }
+
+  
+}
 
 void updateClockDisplay(TFTs::show_t show) {
   // refresh starting on seconds

@@ -41,7 +41,7 @@
   void RtcSet(uint32_t tt) {
     Rtc.SetDateTime(tt);  
   }
-#else 
+#else        ////every clock except HARDWARE_SI_HAI_CLOCK
   // For the DS3231 RTC
   #include <DS1307RTC.h>
   uint32_t RtcBegin() {}
@@ -51,7 +51,7 @@
   void RtcSet(uint32_t tt) {
     RTC.set(tt);
   }
-#endif 
+#endif         ////HARDWARE_SI_HAI_CLOCK
 
 
 
@@ -82,6 +82,10 @@ void Clock::loop() {
     time_valid = false;
   }
   else {
+    
+    //Serial.print("Clock loop running on core ");
+    //Serial.println(xPortGetCoreID());
+    
     loop_time = now();
     local_time = loop_time + config->time_zone_offset;
     time_valid = true;
